@@ -1,0 +1,10 @@
+# NTP (sysntpd, over LTE) synced: log it and keep the RX-8010 RTC in step,
+# so the clock is right at the next boot before the network is up.
+[ "$ACTION" = stratum ] || exit 0
+[ -n "$stratum" ] && [ "$stratum" != 16 ] || exit 0
+stamp=/var/run/um310r-rtc.stamp
+now=$(date +%s)
+last=$(cat $stamp 2>/dev/null || echo 0)
+[ $((now - last)) -ge 3600 ] || exit 0
+echo $now > $stamp
+hwclock -w -u && logger -t um310r-rtc "NTP synced (stratum $stratum, offset ${offset:-?}), RTC updated"

@@ -1,0 +1,36 @@
+#!/bin/sh /etc/rc.common
+# NEC uM310R: enable the external LMC555 hardware watchdog like the stock firmware.
+# GPIO14 is fed by the kernel gpio-wdt driver (DT "linux,wdt-gpio", always-running);
+# GPIO15 (active low) arms the 555, which resets the board ~2 s after feeding stops.
+# U-Boot leaves GPIO15 high (disarmed); stock arms it late in boot, before the LTE
+# module is powered up. Only arm it when the kernel feeder is running, otherwise the
+# board would reset-loop.
+START=10
+
+LOG=log_kmsg
+log_kmsg() { echo "um310r-ext-wdt: $*" > /dev/kmsg; }
+
+feeder_ok() {
+	local w
+	for w in /sys/class/watchdog/watchdog*; do
+		[ "$(basename "$(readlink -f "$w/device/driver")")" = "gpio-wdt" ] && return 0
+	done
+	return 1
+}
+
+start() {
+	if ! feeder_ok; then
+		$LOG "gpio-wdt feeder not found, external watchdog stays disarmed"
+		return 1
+	fi
+	gpioset -c gpiochip0 -t 0 15=0
+	$LOG "external watchdog armed (GPIO15 low)"
+}
+
+# manual use only (no STOP: stock never disarms it during shutdown)
+disarm() {
+	gpioset -c gpiochip0 -t 0 15=1
+	$LOG "external watchdog disarmed (GPIO15 high)"
+}
+EXTRA_COMMANDS="disarm"
+EXTRA_HELP="	disarm	Disarm the external watchdog until the next boot"

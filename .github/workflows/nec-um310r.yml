@@ -1,0 +1,80 @@
+name: nec-um310r
+
+# Builds the NEC uM310R images (nec-um310r/build.sh).
+# - weekly: rebased onto the latest openwrt main first, to notice early when
+#   upstream changes break the device support (the result is not released)
+# - manual run: optionally rebased onto main
+# - tag nec-um310r-v*: built from the tagged commit and published as a release
+on:
+  schedule:
+    - cron: '0 18 * * 0'          # Sundays 18:00 UTC (Mondays 03:00 JST)
+  workflow_dispatch:
+    inputs:
+      track_main:
+        description: 'Rebase onto the latest openwrt main before building'
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'nec-um310r-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto openwrt main
+        if: github.event_name == 'schedule' || inputs.track_main
+        run: |
+          git remote add upstream https://github.com/openwrt/openwrt.git
+          git fetch --no-tags upstream main
+          git -c user.name=ci -c user.email=ci@localhost rebase upstream/main
+
+      # the feed repository; while it is private, read access comes from a
+      # deploy key stored in the UM310R_FEED_KEY secret (empty: public clone)
+      - uses: actions/checkout@v4
+        with:
+          repository: nunnun/openwrt-um310r-feed
+          path: um310r-feed
+          ssh-key: ${{ secrets.UM310R_FEED_KEY }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk \
+            gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev \
+            python3-setuptools python3-dev rsync swig unzip zlib1g-dev file wget
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: dl
+          key: dl-${{ github.run_id }}
+          restore-keys: dl-
+
+      - name: Build
+        run: UM310R_FEED="$GITHUB_WORKSPACE/um310r-feed" nec-um310r/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nec-um310r-${{ github.run_number }}
+          path: nec-um310r/out/
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/nec-um310r-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: nec-um310r/out/*
+          body_path: nec-um310r/RELEASE.md

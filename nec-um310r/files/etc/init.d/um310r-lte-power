@@ -1,0 +1,46 @@
+#!/bin/sh /etc/rc.common
+# NEC uM310R: power on the AMM570 LTE module like the stock firmware (adpmgr):
+#   GPIO12 low (module/USB power), wait 5 s, P35 low (power), P37 low (reset released),
+#   wait 0.5 s, P43 (power key) high for 2 s, then wait for P34 (ready, active low).
+# P34/P36 are module outputs and must stay inputs. Never hold the power key:
+# a press of >= 4 s means "power off" for this module.
+START=11
+STOP=89
+
+LOG="logger -t um310r-lte"
+
+
+ready() { [ "$(gpioget -c "$1" --numeric lte-ready 2>/dev/null)" = 0 ]; }
+
+power_on() {
+	local chip i
+	chip=$(gpiodetect | sed -n 's/^\(gpiochip[0-9]*\) \[0-0074\].*/\1/p')
+	[ -n "$chip" ] || { $LOG "expander not found"; return 1; }
+	if ready "$chip"; then $LOG "module already running"; return 0; fi
+	gpioset -c gpiochip0 -t 0 12=0
+	sleep 5
+	gpioset -c "$chip" -t 0 lte-power-off=0
+	sleep 1
+	gpioset -c "$chip" -t 2s,0 lte-power-key=1
+	i=0
+	while ! ready "$chip" && [ $i -lt 60 ]; do sleep 1; i=$((i + 1)); done
+	if ready "$chip"; then $LOG "module ready after ${i}s"; else $LOG "module not ready after 60s"; fi
+}
+
+start() {
+	# runs in the background: the sequence takes 8 s plus up to 60 s of ready wait
+	power_on &
+}
+
+stop() {
+	local chip
+	chip=$(gpiodetect | sed -n 's/^\(gpiochip[0-9]*\) \[0-0074\].*/\1/p')
+	[ -n "$chip" ] || return 0
+	# stock power-off: 4 s key press, then cut power
+	local i=0
+	ready "$chip" && gpioset -c "$chip" -t 4s,0 lte-power-key=1
+	# like stock adpmgr: wait for the card to finish its own shutdown (P34 = 1)
+	while ready "$chip" && [ $i -lt 60 ]; do sleep 1; i=$((i + 1)); done
+	gpioset -c "$chip" -t 0 lte-power-off=1
+	gpioset -c gpiochip0 -t 0 12=1
+}

@@ -1,0 +1,34 @@
+#!/bin/sh
+# NEC uM310R: LTE WAN through ModemManager (AMM570 in MBIM mode), IPv4 + IPv6,
+# povo APN. The proto handler assigns the WWAN /64 to LAN by itself (RFC 7278).
+DEV=/sys/devices/platform/ahb/1b000000.usb/usb1/1-1
+
+if uci -q get network.wwan >/dev/null; then
+	# settings kept from an older build that used netifd's mbim proto: move them over
+	if [ "$(uci -q get network.wwan.proto)" = mbim ]; then
+		apn=$(uci -q get network.wwan.apn)
+		uci batch <<UCI
+set network.wwan.proto='modemmanager'
+set network.wwan.device='$DEV'
+set network.wwan.apn='${apn:-povo.jp}'
+set network.wwan.iptype='ipv4v6'
+delete network.wwan.pdptype
+delete network.wwan.auth
+UCI
+		uci commit network
+	fi
+	exit 0
+fi
+
+uci batch <<UCI
+set network.wwan=interface
+set network.wwan.proto='modemmanager'
+set network.wwan.device='$DEV'
+set network.wwan.apn='povo.jp'
+set network.wwan.iptype='ipv4v6'
+set network.wwan.signalrate='30'
+add_list firewall.@zone[1].network='wwan'
+set system.@system[0].hostname='uM310R'
+UCI
+uci commit
+exit 0
