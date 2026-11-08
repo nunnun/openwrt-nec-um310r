@@ -450,6 +450,10 @@ ath79_setup_interfaces()
 		ucidef_add_switch "switch0" \
 			"0@eth0" "1:lan"
 		;;
+	nec,um310r)
+		ucidef_add_switch "switch0" \
+			"0@eth0" "2:lan" "1:wan"
+		;;
 	nec,wg1200cr|\
 	qxwlan,e1700ac-v2-8m|\
 	qxwlan,e1700ac-v2-16m|\

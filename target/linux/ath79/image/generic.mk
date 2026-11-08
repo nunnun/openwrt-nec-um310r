@@ -2120,6 +2120,16 @@ define Device/moxa_awk-1137c
 endef
 TARGET_DEVICES += moxa_awk-1137c
 
+define Device/nec_um310r
+  SOC := ar9344
+  DEVICE_VENDOR := NEC
+  DEVICE_MODEL := uM310R
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb-acm kmod-usb-serial-option kmod-usb-net-cdc-mbim umbim \
+	kmod-i2c-gpio kmod-gpio-pca953x kmod-rtc-rx8010 kmod-hwmon-lm75
+  IMAGE_SIZE := 15040k
+endef
+TARGET_DEVICES += nec_um310r
+
 define Device/nec_wx1200cr
   DEVICE_VENDOR := NEC
   IMAGE/default := append-kernel | pad-offset $$$$(BLOCKSIZE) 64 | append-rootfs

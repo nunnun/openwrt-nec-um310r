@@ -92,6 +92,15 @@ platform_do_upgrade() {
 	jjplus,ja76pf2)
 		platform_do_upgrade_redboot_fis "$1" linux
 		;;
+	nec,um310r)
+		# stock U-Boot boots the image slot selected by "activeregion";
+		# OpenWrt uses both slots as one partition starting at slot 1
+		[ "$(fw_printenv -n activeregion 2>/dev/null)" = "1" ] || \
+			fw_setenv activeregion 1
+		[ "$(fw_printenv -n booting_state 2>/dev/null)" = "0" ] || \
+			fw_setenv booting_state 0
+		default_do_upgrade "$1"
+		;;
 	openmesh,a40|\
 	openmesh,a60|\
 	openmesh,mr600-v1|\
