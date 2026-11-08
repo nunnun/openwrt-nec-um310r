@@ -1,0 +1,22 @@
+From: Hirotaka Nakajima <584070+nunnun@users.noreply.github.com>
+Subject: [PATCH] USB: serial: option: add AM Telecom AMM570
+
+The AM Telecom AMM570 is a Qualcomm MDM9207 based LTE Cat.4 M.2 card
+(used in the NEC uM310R). It has selectable USB compositions; add the
+vendor-specific DIAG, AT and NMEA interfaces of:
+
+ 0x0202: ACM (PPP) + DIAG + AT + NMEA
+ 0x0209: MBIM + DIAG + AT + NMEA
+
+---
+--- a/drivers/usb/serial/option.c	2026-11-08 02:42:30.583446506 +0000
++++ b/drivers/usb/serial/option.c	2026-11-08 02:42:30.584610006 +0000
+@@ -2199,6 +2199,8 @@
+ 	  .driver_info = RSVD(5) },
+ 	{ USB_DEVICE_INTERFACE_CLASS(0x1e0e, 0x9205, 0xff) },	/* Simcom SIM7070/SIM7080/SIM7090 AT+ECM mode */
+ 	{ USB_DEVICE_INTERFACE_CLASS(0x1e0e, 0x9206, 0xff) },	/* Simcom SIM7070/SIM7080/SIM7090 AT-only mode */
++	{ USB_DEVICE_INTERFACE_CLASS(0x1ecb, 0x0202, 0xff) },	/* AM Telecom AMM570 ACM mode */
++	{ USB_DEVICE_INTERFACE_CLASS(0x1ecb, 0x0209, 0xff) },	/* AM Telecom AMM570 MBIM mode */
+ 	{ USB_DEVICE(ALCATEL_VENDOR_ID, ALCATEL_PRODUCT_X060S_X200),
+ 	  .driver_info = NCTRL(0) | NCTRL(1) | RSVD(4) },
+ 	{ USB_DEVICE(ALCATEL_VENDOR_ID, ALCATEL_PRODUCT_X220_X500D),
