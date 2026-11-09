@@ -16,7 +16,7 @@ the GitHub workflow builds the images.
 | SoC | Qualcomm Atheros AR9344 |
 | Flash / RAM | 16 MiB SPI NOR / 128 MiB |
 | Wi-Fi | 2.4 GHz 2T2R (built-in) |
-| Ethernet | 2 RJ45 (switch ports 1 and 2) |
+| Ethernet | 2 RJ45: `LAN2` = LAN, `LAN1` (also printed `WAN`) = WAN |
 | LTE | AM Telecom AMM570 on internal USB |
 | Other | external watchdog (LMC555), Epson RX-8010SJ RTC, 2 temperature sensors, ANT/COM/ALM LEDs |
 | Serial | U-Boot / console 115200 8N1 (internal header) |
@@ -50,9 +50,12 @@ untested.
 
 ## Install from the stock firmware
 
+Step-by-step guide with more detail (English and Japanese): [wiki](https://github.com/nunnun/openwrt-nec-um310r/wiki/Installation).
+
 1. In the stock web UI: *Maintenance → Firmware update*, upload
-   `…-initramfs-factory.bin`. The router reboots into OpenWrt running from RAM
-   at http://192.168.1.1 (user `root`, no password).
+   `…-initramfs-factory.bin`. The router reboots into OpenWrt running from RAM.
+   Connect your computer to the **`LAN2`** jack (`LAN1`/`WAN` is the OpenWrt
+   WAN port) and open http://192.168.1.1 (user `root`, no password).
 2. **Back up the flash now** (needed to go back to stock): in LuCI
    *System → Backup / Flash Firmware → Save mtdblock contents*, download
    **every** mtdblock (at least `u-boot`, `u-boot-env`, `firmware`, `art`).
