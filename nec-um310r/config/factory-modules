@@ -17,3 +17,5 @@ libpthread
 um310r-modem
 luci-app-um310r
 luci-i18n-um310r-ja
+tailscale-tiny
+kmod-tun

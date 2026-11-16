@@ -32,6 +32,10 @@ the GitHub workflow builds the images.
 - External watchdog fed by the kernel; NTP time stored in the RTC
 - Automatic recovery of the LTE connection and of a hung card
 - The ANT/COM/ALM LEDs behave like the stock firmware
+- Tailscale (`tailscale-tiny`: kernel TUN routing, subnet routes, exit nodes,
+  MagicDNS; no Tailscale SSH, Serve or Taildrop). Not set up by default: run
+  `tailscale up`, and add an unmanaged interface on `tailscale0` with its own
+  firewall zone for access over Tailscale
 
 The helper packages live in
 [openwrt-um310r-feed](https://github.com/nunnun/openwrt-um310r-feed).
@@ -110,6 +114,7 @@ external watchdog, RTC update, first-boot network defaults).
   match these images (different kernel build). Userspace packages install
   fine.
 - Tested with a povo SIM (KDDI network) only.
+- About 1.5 MB of flash is left for settings and extra packages.
 
 ## License
 
