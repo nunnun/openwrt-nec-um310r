@@ -32,8 +32,9 @@ the GitHub workflow builds the images.
 - External watchdog fed by the kernel; NTP time stored in the RTC
 - Automatic recovery of the LTE connection and of a hung card
 - The ANT/COM/ALM LEDs behave like the stock firmware
-- Tailscale (`tailscale-tiny`: kernel TUN routing, subnet routes, exit nodes,
-  MagicDNS; no Tailscale SSH, Serve or Taildrop). Not set up by default: run
+- Tailscale, in the `…-tailscale-…` image only (`tailscale-tiny`: kernel TUN
+  routing, subnet routes, exit nodes, MagicDNS; no Tailscale SSH, Serve or
+  Taildrop). Not set up by default: run
   `tailscale up`, and add an unmanaged interface on `tailscale0` with its own
   firewall zone for access over Tailscale
 
@@ -46,6 +47,7 @@ The helper packages live in
 |---|---|
 | `…-initramfs-factory.bin` | upload from the **stock** web UI (first install only; runs OpenWrt from RAM, no LTE) |
 | `…-squashfs-sysupgrade.bin` | the real firmware, flashed from OpenWrt |
+| `…-tailscale-squashfs-sysupgrade.bin` | the same with Tailscale; less room for settings and extra packages |
 | `sha256sums`, `BUILDINFO` | checksums, source commit |
 
 Releases are builds that were tested on a real device. The weekly workflow
@@ -65,8 +67,8 @@ Step-by-step guide with more detail (English and Japanese): [wiki](https://githu
    **every** mtdblock (at least `u-boot`, `u-boot-env`, `firmware`, `art`).
    `art` holds the Wi-Fi calibration and MAC addresses of your unit; keep the
    files safe and private.
-3. In the same page, *Flash new firmware image*: `…-squashfs-sysupgrade.bin`,
-   **without** keeping settings.
+3. In the same page, *Flash new firmware image*: `…-squashfs-sysupgrade.bin`
+   (or `…-tailscale-squashfs-sysupgrade.bin`), **without** keeping settings.
 4. After the reboot, set a root password (*System → Administration*) and check
    the LTE settings (APN).
 
@@ -114,7 +116,8 @@ external watchdog, RTC update, first-boot network defaults).
   match these images (different kernel build). Userspace packages install
   fine.
 - Tested with a povo SIM (KDDI network) only.
-- About 1.5 MB of flash is left for settings and extra packages.
+- Flash left for settings and extra packages: about 5.5 MB with the plain
+  image, about 1.5 MB with the Tailscale image.
 
 ## License
 

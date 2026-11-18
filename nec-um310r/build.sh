@@ -11,7 +11,12 @@
 #   packages built as modules only, so that the initramfs fits the stock
 #   firmware slot (0x750000). It is only used to migrate from the stock
 #   firmware and has no LTE.
-# Pass 2 (full): the full configuration -> sysupgrade image.
+# Pass 2 (full): the full configuration -> sysupgrade image with Tailscale
+#   (saved as ...-tailscale-squashfs-sysupgrade.bin).
+# Pass 3: the same with tailscale-tiny turned into a module -> the plain
+#   sysupgrade image. Only the image is rebuilt (under a minute); kmod-tun
+#   stays in both, since kernel modules from the OpenWrt servers do not match
+#   this kernel.
 set -e
 cd "$(dirname "$0")/.."
 D=nec-um310r
@@ -47,10 +52,17 @@ make download -j"$JOBS"
 build
 cp $B-initramfs-kernel.bin "$OUT/"
 
-echo "== pass 2: full"
+echo "== pass 2: full (with Tailscale)"
 cp $D/config/full.diffconfig .config
 make defconfig
 make download -j"$JOBS"
+build
+cp $B-squashfs-sysupgrade.bin "$OUT/openwrt-ath79-generic-nec_um310r-tailscale-squashfs-sysupgrade.bin"
+cp $B.manifest "$OUT/openwrt-ath79-generic-nec_um310r-tailscale.manifest"
+
+echo "== pass 3: full without Tailscale"
+sed -i "s/^CONFIG_PACKAGE_tailscale-tiny=y$/CONFIG_PACKAGE_tailscale-tiny=m/" .config
+make defconfig
 build
 cp $B-squashfs-sysupgrade.bin $B.manifest "$OUT/"
 
